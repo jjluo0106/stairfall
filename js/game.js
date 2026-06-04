@@ -11,6 +11,7 @@ import { Player } from './player.js';
 import { createInitialStairs, spawnStair } from './stair.js';
 import { checkStairCollision, isStandingOn, isSpikeHit } from './collision.js';
 import { isCeilingSpikeHit, drawCeilingSpikes } from './ceiling.js';
+import { gameAudio } from './audio.js';
 
 export const GameState = {
   MENU: 'menu',
@@ -101,7 +102,10 @@ export class Game {
     }
 
     if (justLanded && standingStair && !standingStair.hasSpikes) {
+      const beforeHp = this.player.hp;
       this.player.heal(LAND_HEAL);
+      gameAudio.playLand();
+      if (this.player.hp > beforeHp) gameAudio.playHeal();
     }
 
     const hitSpike =
@@ -114,6 +118,7 @@ export class Game {
       this.player.takeDamage(SPIKE_DAMAGE, now)
     ) {
       this.lastSpikeHit = now;
+      gameAudio.playHurt();
     }
 
     this.scrollOffset += speed;
@@ -121,6 +126,7 @@ export class Game {
     if (newFloor > this.floor) {
       this.floor = newFloor;
       this.score += 10;
+      gameAudio.playFloor();
       if (this.floor % 5 === 0) {
         this.speedMultiplier = Math.min(2, 1 + this.floor * 0.02);
       }

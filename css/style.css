@@ -141,10 +141,40 @@ body {
   color: #ffd93d;
 }
 
-.controls-hint {
+.footer-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   margin-top: 8px;
+}
+
+.controls-hint {
+  margin: 0;
   font-size: 0.8rem;
   color: #5a6a8a;
+}
+
+.btn-sound {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 217, 61, 0.35);
+  background: rgba(255, 217, 61, 0.1);
+  color: #ffd93d;
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-sound:hover {
+  background: rgba(255, 217, 61, 0.2);
+}
+
+.btn-sound[aria-pressed="false"] {
+  color: #8892b0;
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .leaderboard-panel {

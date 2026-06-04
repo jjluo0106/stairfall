@@ -1,6 +1,7 @@
 import { Game, GameState } from './game.js';
 import { LEADERBOARD_ENABLED } from './config.js';
 import { fetchLeaderboard, submitScore } from './leaderboard.js';
+import { gameAudio } from './audio.js';
 
 const canvas = document.getElementById('gameCanvas');
 const overlay = document.getElementById('overlay');
@@ -18,6 +19,7 @@ const scoreDisplay = document.getElementById('scoreDisplay');
 const leaderboardList = document.getElementById('leaderboardList');
 const leaderboardStatus = document.getElementById('leaderboardStatus');
 const refreshLeaderboardBtn = document.getElementById('refreshLeaderboardBtn');
+const soundToggleBtn = document.getElementById('soundToggleBtn');
 
 const game = new Game(canvas);
 const PLAYER_NAME_KEY = 'stairfall-player-name';
@@ -142,6 +144,7 @@ function gameLoop(timestamp) {
 
   if (game.state === GameState.GAME_OVER && !game.gameOverHandled) {
     game.gameOverHandled = true;
+    gameAudio.playGameOver();
     showOverlay(
       '遊戲結束',
       'HP 歸零或掉出畫面了！再試一次吧。',
@@ -154,10 +157,27 @@ function gameLoop(timestamp) {
   requestAnimationFrame(gameLoop);
 }
 
+function updateSoundToggleLabel() {
+  if (!soundToggleBtn) return;
+  soundToggleBtn.textContent = gameAudio.isEnabled() ? '🔊 音效' : '🔇 靜音';
+  soundToggleBtn.setAttribute('aria-pressed', gameAudio.isEnabled() ? 'true' : 'false');
+}
+
 startBtn.addEventListener('click', () => {
+  gameAudio.resume();
+  gameAudio.playStart();
   hideOverlay();
   game.start();
 });
+
+if (soundToggleBtn) {
+  updateSoundToggleLabel();
+  soundToggleBtn.addEventListener('click', () => {
+    gameAudio.toggle();
+    if (gameAudio.isEnabled()) gameAudio.resume();
+    updateSoundToggleLabel();
+  });
+}
 
 submitScoreBtn.addEventListener('click', handleSubmitScore);
 
@@ -174,6 +194,7 @@ document.addEventListener('keydown', (e) => {
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code)) {
     e.preventDefault();
   }
+  gameAudio.resume();
   game.handleKeyDown(e.code);
 });
 
