@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小朋友下樓梯</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    window.STAIRFALL_CONFIG = {
+      apiUrl: ''
+    };
+  </script>
+</head>
+<body>
+  <div class="page-layout">
+    <div class="game-wrapper">
+      <header class="game-header">
+        <h1>小朋友下樓梯</h1>
+        <p class="subtitle">NS-Shaft 風格 · HTML5 Canvas</p>
+      </header>
+
+      <div class="canvas-container">
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
+        <div id="overlay" class="overlay hidden">
+          <div class="overlay-content">
+            <h2 id="overlayTitle">小朋友下樓梯</h2>
+            <p id="overlayMessage">用 ← → 或 A D 移動，站在平台上往「下」衝！</p>
+            <p id="overlayScore" class="overlay-score hidden"></p>
+            <div id="submitScoreSection" class="submit-score hidden">
+              <label for="playerName">暱稱</label>
+              <input id="playerName" type="text" maxlength="20" placeholder="輸入暱稱（最多 20 字）" autocomplete="nickname">
+              <button id="submitScoreBtn" class="btn btn-secondary">提交至全服排行榜</button>
+              <p id="submitStatus" class="submit-status"></p>
+            </div>
+            <button id="startBtn" class="btn">開始遊戲</button>
+          </div>
+        </div>
+      </div>
+
+      <footer class="game-footer">
+        <div class="hud">
+          <span>HP: <strong id="hpDisplay">100</strong></span>
+          <span>樓層: <strong id="floorDisplay">0</strong></span>
+          <span>分數: <strong id="scoreDisplay">0</strong></span>
+        </div>
+        <p class="controls-hint">← → / A D 移動 · 避開紅色尖刺 · R 重新開始</p>
+      </footer>
+    </div>
+
+    <aside class="leaderboard-panel">
+      <div class="leaderboard-header">
+        <h2>全服排行榜</h2>
+        <button id="refreshLeaderboardBtn" class="btn-icon" title="重新整理">↻</button>
+      </div>
+      <p id="leaderboardStatus" class="leaderboard-status">載入中…</p>
+      <ol id="leaderboardList" class="leaderboard-list"></ol>
+    </aside>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
