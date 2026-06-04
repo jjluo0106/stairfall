@@ -104,8 +104,8 @@ export class Game {
     if (justLanded && standingStair && !standingStair.hasSpikes) {
       const beforeHp = this.player.hp;
       this.player.heal(LAND_HEAL);
-      gameAudio.playLand();
-      if (this.player.hp > beforeHp) gameAudio.playHeal();
+      void gameAudio.playLand();
+      if (this.player.hp > beforeHp) void gameAudio.playHeal();
     }
 
     const hitSpike =
@@ -118,7 +118,7 @@ export class Game {
       this.player.takeDamage(SPIKE_DAMAGE, now)
     ) {
       this.lastSpikeHit = now;
-      gameAudio.playHurt();
+      void gameAudio.playHurt();
     }
 
     this.scrollOffset += speed;
@@ -126,7 +126,7 @@ export class Game {
     if (newFloor > this.floor) {
       this.floor = newFloor;
       this.score += 10;
-      gameAudio.playFloor();
+      void gameAudio.playFloor();
       if (this.floor % 5 === 0) {
         this.speedMultiplier = Math.min(2, 1 + this.floor * 0.02);
       }

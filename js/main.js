@@ -144,7 +144,7 @@ function gameLoop(timestamp) {
 
   if (game.state === GameState.GAME_OVER && !game.gameOverHandled) {
     game.gameOverHandled = true;
-    gameAudio.playGameOver();
+    void gameAudio.playGameOver();
     showOverlay(
       '遊戲結束',
       'HP 歸零或掉出畫面了！再試一次吧。',
@@ -163,18 +163,18 @@ function updateSoundToggleLabel() {
   soundToggleBtn.setAttribute('aria-pressed', gameAudio.isEnabled() ? 'true' : 'false');
 }
 
-startBtn.addEventListener('click', () => {
-  gameAudio.resume();
-  gameAudio.playStart();
+startBtn.addEventListener('click', async () => {
+  await gameAudio.playStart();
   hideOverlay();
   game.start();
 });
 
 if (soundToggleBtn) {
   updateSoundToggleLabel();
-  soundToggleBtn.addEventListener('click', () => {
+  soundToggleBtn.addEventListener('click', async () => {
+    const wasOff = !gameAudio.isEnabled();
     gameAudio.toggle();
-    if (gameAudio.isEnabled()) gameAudio.resume();
+    if (gameAudio.isEnabled() && wasOff) await gameAudio.playUiClick();
     updateSoundToggleLabel();
   });
 }
@@ -190,11 +190,15 @@ playerNameInput.addEventListener('keydown', (e) => {
 
 refreshLeaderboardBtn.addEventListener('click', refreshLeaderboard);
 
+canvas.addEventListener('click', () => {
+  void gameAudio.ensureRunning();
+});
+
 document.addEventListener('keydown', (e) => {
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code)) {
     e.preventDefault();
   }
-  gameAudio.resume();
+  void gameAudio.ensureRunning();
   game.handleKeyDown(e.code);
 });
 
