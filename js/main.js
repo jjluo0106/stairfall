@@ -1,7 +1,7 @@
 import { Game, GameState } from './game.js';
 import { LEADERBOARD_ENABLED } from './config.js';
 import { fetchLeaderboard, submitScore } from './leaderboard.js';
-import { gameAudio } from './audio.js';
+import { gameAudio } from './audio.js?v=4';
 
 const canvas = document.getElementById('gameCanvas');
 const overlay = document.getElementById('overlay');
@@ -164,7 +164,8 @@ function updateSoundToggleLabel() {
 }
 
 startBtn.addEventListener('click', async () => {
-  await gameAudio.playStart();
+  await gameAudio.unlock();
+  gameAudio.playStart();
   hideOverlay();
   game.start();
 });
@@ -174,7 +175,10 @@ if (soundToggleBtn) {
   soundToggleBtn.addEventListener('click', async () => {
     const wasOff = !gameAudio.isEnabled();
     gameAudio.toggle();
-    if (gameAudio.isEnabled() && wasOff) await gameAudio.playUiClick();
+    if (gameAudio.isEnabled()) {
+      await gameAudio.unlock();
+      if (wasOff) gameAudio.playUiClick();
+    }
     updateSoundToggleLabel();
   });
 }
@@ -190,15 +194,19 @@ playerNameInput.addEventListener('keydown', (e) => {
 
 refreshLeaderboardBtn.addEventListener('click', refreshLeaderboard);
 
+overlay.addEventListener('click', () => {
+  void gameAudio.unlock();
+});
+
 canvas.addEventListener('click', () => {
-  void gameAudio.ensureRunning();
+  void gameAudio.unlock();
 });
 
 document.addEventListener('keydown', (e) => {
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code)) {
     e.preventDefault();
   }
-  void gameAudio.ensureRunning();
+  void gameAudio.unlock();
   game.handleKeyDown(e.code);
 });
 

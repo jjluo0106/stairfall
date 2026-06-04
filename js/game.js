@@ -11,7 +11,7 @@ import { Player } from './player.js';
 import { createInitialStairs, spawnStair } from './stair.js';
 import { checkStairCollision, isStandingOn, isSpikeHit } from './collision.js';
 import { isCeilingSpikeHit, drawCeilingSpikes } from './ceiling.js';
-import { gameAudio } from './audio.js';
+import { gameAudio } from './audio.js?v=4';
 
 export const GameState = {
   MENU: 'menu',

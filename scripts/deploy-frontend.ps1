@@ -31,7 +31,16 @@ aws s3 sync $DistDir "s3://$BucketName" `
     --region $Region `
     --delete `
     --cache-control "public, max-age=3600" `
-    --exclude "index.html"
+    --exclude "index.html" `
+    --exclude "js/*"
+
+$jsDir = Join-Path $DistDir "js"
+if (Test-Path $jsDir) {
+    aws s3 sync $jsDir "s3://$BucketName/js" `
+        --region $Region `
+        --delete `
+        --cache-control "no-cache, no-store, must-revalidate"
+}
 
 aws s3 cp (Join-Path $DistDir "index.html") "s3://$BucketName/index.html" `
     --region $Region `

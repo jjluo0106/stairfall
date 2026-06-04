@@ -17,7 +17,12 @@ sed -i.bak "s|apiUrl: ''|apiUrl: '$API_URL'|" "$DIST/index.html"
 rm -f "$DIST/index.html.bak"
 
 aws s3 sync "$DIST" "s3://$BUCKET" --region "$REGION" --delete \
-  --cache-control "public, max-age=3600" --exclude "index.html"
+  --cache-control "public, max-age=3600" \
+  --exclude "index.html" --exclude "js/*"
+
+aws s3 sync "$DIST/js" "s3://$BUCKET/js" --region "$REGION" --delete \
+  --cache-control "no-cache, no-store, must-revalidate" \
+  --content-type "application/javascript"
 aws s3 cp "$DIST/index.html" "s3://$BUCKET/index.html" --region "$REGION" \
   --cache-control "no-cache, no-store, must-revalidate" \
   --content-type "text/html; charset=utf-8"
