@@ -31,7 +31,30 @@ python -m http.server 8080
 - [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
 - Node.js 18+（Lambda 依賴打包用）
 
-## 一鍵部署
+## CI/CD（GitHub Actions）
+
+推送到 `main` 時會依變更路徑自動部署：
+
+| 變更路徑 | 動作 |
+|----------|------|
+| `index.html`、`css/`、`js/` | 上傳 S3 + 注入 API URL + 嘗試清除 CloudFront 快取 |
+| `backend/`、`infra/` | `sam build` + `sam deploy`，接著部署前端 |
+| 手動 | GitHub → Actions → **Deploy Stairfall to AWS** → Run workflow |
+
+### 必要設定（GitHub Repository Secrets）
+
+在 stairfall 倉庫的 **Settings → Secrets and variables → Actions** 新增（可與 resume-website 共用同一組 IAM 金鑰）：
+
+| Secret | 說明 |
+|--------|------|
+| `AWS_ACCESS_KEY_ID` | 具 S3、CloudFormation、SAM/Lambda 權限的 IAM 使用者 |
+| `AWS_SECRET_ACCESS_KEY` | 對應 Secret |
+
+建議 IAM 額外包含 `cloudfront:CreateInvalidation`（你本機部署時曾出現權限不足；CI 會 `continue-on-error`，沒權限時只是快取較晚更新）。
+
+區域固定為 **ap-northeast-1**，CloudFormation stack 名稱為 **stairfall**（與 `infra/samconfig.toml.example` 一致）。
+
+## 一鍵部署（本機）
 
 ```powershell
 cd scripts

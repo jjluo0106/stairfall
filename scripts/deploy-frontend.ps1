@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(Mandatory = $true)]
     [string]$ApiUrl,
 
@@ -13,7 +13,7 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 $DistDir = Join-Path $Root "dist"
 
-Write-Host "==> 準備前端建置目錄..." -ForegroundColor Cyan
+Write-Host "==> Preparing frontend build..." -ForegroundColor Cyan
 if (Test-Path $DistDir) { Remove-Item $DistDir -Recurse -Force }
 New-Item -ItemType Directory -Path $DistDir | Out-Null
 
@@ -26,7 +26,7 @@ $content = Get-Content $indexPath -Raw -Encoding UTF8
 $content = $content -replace "apiUrl: ''", "apiUrl: '$ApiUrl'"
 Set-Content $indexPath $content -Encoding UTF8 -NoNewline
 
-Write-Host "==> 上傳至 S3: $BucketName ..." -ForegroundColor Cyan
+Write-Host "==> Uploading to S3: $BucketName ..." -ForegroundColor Cyan
 aws s3 sync $DistDir "s3://$BucketName" `
     --region $Region `
     --delete `
@@ -39,12 +39,18 @@ aws s3 cp (Join-Path $DistDir "index.html") "s3://$BucketName/index.html" `
     --content-type "text/html; charset=utf-8"
 
 if ($DistributionId) {
-    Write-Host "==> 清除 CloudFront 快取..." -ForegroundColor Cyan
+    Write-Host "==> Invalidating CloudFront cache..." -ForegroundColor Cyan
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
     aws cloudfront create-invalidation `
         --distribution-id $DistributionId `
         --paths "/*" | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Warning: CloudFront invalidation failed (need cloudfront:CreateInvalidation on IAM user)." -ForegroundColor Yellow
+    }
+    $ErrorActionPreference = $prevEap
 }
 
 Write-Host ""
-Write-Host "前端部署完成！" -ForegroundColor Green
-Write-Host "  遊戲網址請至 CloudFormation Outputs 的 CloudFrontUrl 查看"
+Write-Host "Frontend deploy complete." -ForegroundColor Green
+Write-Host "  Open CloudFormation output CloudFrontUrl in your browser."

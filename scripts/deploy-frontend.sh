@@ -23,7 +23,10 @@ aws s3 cp "$DIST/index.html" "s3://$BUCKET/index.html" --region "$REGION" \
   --content-type "text/html; charset=utf-8"
 
 if [[ -n "$CF_ID" ]]; then
-  aws cloudfront create-invalidation --distribution-id "$CF_ID" --paths "/*" >/dev/null
+  echo "==> Invalidating CloudFront cache..."
+  if ! aws cloudfront create-invalidation --distribution-id "$CF_ID" --paths "/*" >/dev/null; then
+    echo "Warning: CloudFront invalidation failed (need cloudfront:CreateInvalidation on IAM user)."
+  fi
 fi
 
 echo "前端已上傳至 s3://$BUCKET"

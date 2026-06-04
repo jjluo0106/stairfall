@@ -1,0 +1,131 @@
+name: Deploy Stairfall to AWS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-northeast-1
+  STACK_NAME: stairfall
+  PROJECT_NAME: stairfall
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - 'infra/**'
+            frontend:
+              - 'index.html'
+              - 'css/**'
+              - 'js/**'
+              - 'scripts/deploy-frontend.sh'
+              - 'scripts/deploy-frontend.ps1'
+
+  deploy-backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - uses: aws-actions/setup-sam@v2
+
+      - name: Install Lambda dependencies
+        working-directory: backend
+        run: npm ci --omit=dev
+
+      - name: SAM build & deploy
+        working-directory: infra
+        run: |
+          sam build --template-file template.yaml
+          sam deploy \
+            --stack-name "${{ env.STACK_NAME }}" \
+            --region "${{ env.AWS_REGION }}" \
+            --resolve-s3 \
+            --capabilities CAPABILITY_IAM \
+            --parameter-overrides "ProjectName=${{ env.PROJECT_NAME }}" \
+            --no-fail-on-empty-changeset \
+            --no-confirm-changeset
+
+  deploy-frontend:
+    needs: [changes, deploy-backend]
+    if: |
+      always() &&
+      (needs.changes.outputs.frontend == 'true' ||
+       needs.changes.outputs.backend == 'true' ||
+       github.event_name == 'workflow_dispatch') &&
+      (needs.deploy-backend.result == 'success' ||
+       needs.deploy-backend.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Read CloudFormation outputs
+        id: stack
+        run: |
+          outputs=$(aws cloudformation describe-stacks \
+            --stack-name "${{ env.STACK_NAME }}" \
+            --region "${{ env.AWS_REGION }}" \
+            --query "Stacks[0].Outputs" \
+            --output json)
+
+          api_url=$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="ApiUrl") | .OutputValue')
+          bucket=$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="WebsiteBucketName") | .OutputValue')
+          cf_id=$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="CloudFrontDistributionId") | .OutputValue')
+          cf_url=$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="CloudFrontUrl") | .OutputValue')
+
+          if [[ -z "$api_url" || -z "$bucket" ]]; then
+            echo "::error::CloudFormation stack '${{ env.STACK_NAME }}' missing ApiUrl or WebsiteBucketName outputs."
+            exit 1
+          fi
+
+          echo "api_url=$api_url" >> "$GITHUB_OUTPUT"
+          echo "bucket=$bucket" >> "$GITHUB_OUTPUT"
+          echo "cf_id=$cf_id" >> "$GITHUB_OUTPUT"
+          echo "cf_url=$cf_url" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy frontend to S3
+        run: |
+          chmod +x scripts/deploy-frontend.sh
+          ./scripts/deploy-frontend.sh \
+            "${{ steps.stack.outputs.api_url }}" \
+            "${{ steps.stack.outputs.bucket }}" \
+            "${{ steps.stack.outputs.cf_id }}" \
+            "${{ env.AWS_REGION }}"
+
+      - name: Deployment summary
+        run: |
+          echo "### Stairfall deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Game URL: ${{ steps.stack.outputs.cf_url }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- API: ${{ steps.stack.outputs.api_url }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- S3: ${{ steps.stack.outputs.bucket }}" >> "$GITHUB_STEP_SUMMARY"
