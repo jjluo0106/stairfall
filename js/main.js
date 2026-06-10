@@ -1,7 +1,7 @@
 import { Game, GameState } from './game.js';
 import { LEADERBOARD_ENABLED } from './config.js';
 import { fetchLeaderboard, submitScore } from './leaderboard.js';
-import { gameAudio } from './audio.js?v=5';
+import { gameAudio } from './audio.js?v=6';
 
 const canvas = document.getElementById('gameCanvas');
 const overlay = document.getElementById('overlay');
@@ -225,7 +225,7 @@ document.addEventListener('keyup', (e) => {
 
 showOverlay(
   '小朋友下樓梯',
-  '用 ← → 或 A D 左右移動。重力會讓你往下掉，站在平台上才能繼續衝！小心紅色尖刺。'
+  '用 ← → 或 A D 左右移動。黃色彈簧會彈起、灰色輸送帶會推你左右移動。小心紅色尖刺！'
 );
 startBtn.textContent = '開始遊戲';
 

@@ -6,12 +6,15 @@ import {
   SPIKE_COOLDOWN,
   LAND_HEAL,
   MAX_HP,
+  SPRING_BOUNCE,
+  CONVEYOR_SPEED,
+  PlatformType,
 } from './constants.js';
 import { Player } from './player.js';
 import { createInitialStairs, spawnStair } from './stair.js';
 import { checkStairCollision, isStandingOn, isSpikeHit } from './collision.js';
 import { isCeilingSpikeHit, drawCeilingSpikes } from './ceiling.js';
-import { gameAudio } from './audio.js?v=5';
+import { gameAudio } from './audio.js?v=6';
 
 export const GameState = {
   MENU: 'menu',
@@ -84,9 +87,17 @@ export class Game {
 
     for (const stair of this.stairs) {
       if (checkStairCollision(this.player, stair)) {
-        this.player.landOn(stair);
-        standingStair = stair;
-        justLanded = true;
+        if (stair.type === PlatformType.SPRING) {
+          this.player.y = stair.y - this.player.height;
+          this.player.vy = SPRING_BOUNCE;
+          this.player.onGround = false;
+          justLanded = true;
+          void gameAudio.playSpring();
+        } else {
+          this.player.landOn(stair);
+          standingStair = stair;
+          justLanded = true;
+        }
         break;
       }
     }
@@ -98,6 +109,14 @@ export class Game {
           standingStair = stair;
           break;
         }
+      }
+    }
+
+    if (standingStair?.type === PlatformType.CONVEYOR) {
+      this.player.x += standingStair.direction * CONVEYOR_SPEED;
+      if (this.player.x < 0) this.player.x = 0;
+      if (this.player.x + this.player.width > CANVAS_WIDTH) {
+        this.player.x = CANVAS_WIDTH - this.player.width;
       }
     }
 
@@ -161,7 +180,7 @@ export class Game {
     this.drawBackground();
 
     for (const stair of this.stairs) {
-      stair.draw(this.ctx);
+      stair.draw(this.ctx, now);
     }
 
     this.player.draw(this.ctx, now);

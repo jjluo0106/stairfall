@@ -103,6 +103,11 @@ export class GameAudio {
     setTimeout(() => this._play('start3', 784, 0.14, 0.5), 200);
   }
 
+  playSpring() {
+    this._play('spring', 320, 0.14, 0.55);
+    setTimeout(() => this._play('spring2', 520, 0.1, 0.45), 80);
+  }
+
   playLand() {
     const now = performance.now();
     if (now - this._lastLandAt < 90) return;
