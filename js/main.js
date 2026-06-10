@@ -1,7 +1,7 @@
 import { Game, GameState } from './game.js';
 import { LEADERBOARD_ENABLED } from './config.js';
 import { fetchLeaderboard, submitScore } from './leaderboard.js';
-import { gameAudio } from './audio.js?v=4';
+import { gameAudio } from './audio.js?v=5';
 
 const canvas = document.getElementById('gameCanvas');
 const overlay = document.getElementById('overlay');
@@ -66,6 +66,14 @@ function updateHUD() {
   scoreDisplay.textContent = hud.score;
 }
 
+function formatLeaderboardTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 function renderLeaderboard(scores, offline = false) {
   leaderboardList.innerHTML = '';
 
@@ -88,6 +96,7 @@ function renderLeaderboard(scores, offline = false) {
       <span class="rank">${entry.rank}</span>
       <span class="name">${escapeHtml(entry.playerName)}</span>
       <span class="meta">${entry.score} 分 · F${entry.floor}</span>
+      <time class="time" datetime="${escapeHtml(entry.createdAt || '')}">${formatLeaderboardTime(entry.createdAt)}</time>
     `;
     leaderboardList.appendChild(li);
   }
