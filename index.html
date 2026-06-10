@@ -37,6 +37,11 @@
         </div>
       </div>
 
+      <div class="touch-controls" id="touchControls" aria-label="觸控移動">
+        <button type="button" class="touch-btn" id="touchLeft" aria-label="向左移動">←</button>
+        <button type="button" class="touch-btn" id="touchRight" aria-label="向右移動">→</button>
+      </div>
+
       <footer class="game-footer">
         <div class="hud">
           <span>HP: <strong id="hpDisplay">100</strong></span>
@@ -44,7 +49,7 @@
           <span>分數: <strong id="scoreDisplay">0</strong></span>
         </div>
         <div class="footer-controls">
-          <p class="controls-hint">← → / A D 移動 · 黃色彈簧彈起 · 灰色輸送帶推移 · 避開尖刺 · R 重開</p>
+          <p class="controls-hint">鍵盤 ← → / A D · 手機按鈕或按住畫面左右側 · 黃色彈簧 · 灰色輸送帶 · R 重開</p>
           <button type="button" id="soundToggleBtn" class="btn-sound" aria-pressed="true">🔊 音效</button>
         </div>
       </footer>
@@ -60,6 +65,6 @@
     </aside>
   </div>
 
-  <script type="module" src="js/main.js?v=6"></script>
+  <script type="module" src="js/main.js?v=7"></script>
 </body>
 </html>

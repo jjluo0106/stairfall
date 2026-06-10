@@ -63,7 +63,40 @@ body {
 
 #gameCanvas {
   display: block;
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  touch-action: none;
   background: #2d3436;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.touch-controls {
+  display: none;
+  width: 100%;
+  max-width: 400px;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.touch-btn {
+  flex: 1;
+  min-height: 52px;
+  border: 1px solid rgba(255, 217, 61, 0.35);
+  border-radius: 10px;
+  background: rgba(255, 217, 61, 0.12);
+  color: #ffd93d;
+  font-size: 1.6rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-btn:active {
+  background: rgba(255, 217, 61, 0.28);
+  transform: scale(0.98);
 }
 
 .overlay {
@@ -316,14 +349,35 @@ body {
   text-align: center;
 }
 
+@media (max-width: 720px), (hover: none) and (pointer: coarse) {
+  .touch-controls {
+    display: flex;
+  }
+}
+
 @media (max-width: 720px) {
   .page-layout {
     flex-direction: column;
     align-items: center;
   }
 
+  .game-wrapper {
+    width: 100%;
+    max-width: 400px;
+    padding: 16px 12px;
+  }
+
+  .canvas-container {
+    width: 100%;
+  }
+
   .leaderboard-panel {
     width: 100%;
     max-width: 400px;
+  }
+
+  .controls-hint {
+    font-size: 0.72rem;
+    line-height: 1.45;
   }
 }

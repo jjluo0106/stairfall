@@ -1,7 +1,7 @@
 import { Game, GameState } from './game.js';
 import { LEADERBOARD_ENABLED } from './config.js';
 import { fetchLeaderboard, submitScore } from './leaderboard.js';
-import { gameAudio } from './audio.js?v=6';
+import { gameAudio } from './audio.js?v=7';
 
 const canvas = document.getElementById('gameCanvas');
 const overlay = document.getElementById('overlay');
@@ -95,7 +95,7 @@ function renderLeaderboard(scores, offline = false) {
     li.innerHTML = `
       <span class="rank">${entry.rank}</span>
       <span class="name">${escapeHtml(entry.playerName)}</span>
-      <span class="meta">${entry.score} 分 · F${entry.floor}</span>
+      <span class="meta">F${entry.floor}</span>
       <time class="time" datetime="${escapeHtml(entry.createdAt || '')}">${formatLeaderboardTime(entry.createdAt)}</time>
     `;
     leaderboardList.appendChild(li);
@@ -203,11 +203,77 @@ playerNameInput.addEventListener('keydown', (e) => {
 
 refreshLeaderboardBtn.addEventListener('click', refreshLeaderboard);
 
-overlay.addEventListener('click', () => {
+const touchLeftBtn = document.getElementById('touchLeft');
+const touchRightBtn = document.getElementById('touchRight');
+
+function bindTouchButton(btn, direction) {
+  if (!btn) return;
+
+  const press = (e) => {
+    e.preventDefault();
+    void gameAudio.unlock();
+    game.setMove(direction, true);
+  };
+  const release = (e) => {
+    e.preventDefault();
+    game.setMove(direction, false);
+  };
+
+  btn.addEventListener('pointerdown', press);
+  btn.addEventListener('pointerup', release);
+  btn.addEventListener('pointerleave', release);
+  btn.addEventListener('pointercancel', release);
+  btn.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+
+bindTouchButton(touchLeftBtn, 'left');
+bindTouchButton(touchRightBtn, 'right');
+
+let canvasTouchDir = null;
+
+function canvasMoveDirection(clientX) {
+  const rect = canvas.getBoundingClientRect();
+  const x = clientX - rect.left;
+  return x < rect.width / 2 ? 'left' : 'right';
+}
+
+function applyCanvasTouchDirection(dir) {
+  game.setMove('left', dir === 'left');
+  game.setMove('right', dir === 'right');
+  canvasTouchDir = dir;
+}
+
+function clearCanvasTouch(e) {
+  if (e && canvas.hasPointerCapture(e.pointerId)) {
+    canvas.releasePointerCapture(e.pointerId);
+  }
+  game.clearMove();
+  canvasTouchDir = null;
+}
+
+canvas.addEventListener('pointerdown', (e) => {
   void gameAudio.unlock();
+  if (game.state !== GameState.PLAYING) return;
+  if (e.pointerType === 'mouse') return;
+  e.preventDefault();
+  canvas.setPointerCapture(e.pointerId);
+  applyCanvasTouchDirection(canvasMoveDirection(e.clientX));
 });
 
-canvas.addEventListener('click', () => {
+canvas.addEventListener('pointermove', (e) => {
+  if (game.state !== GameState.PLAYING || !canvas.hasPointerCapture(e.pointerId)) return;
+  const dir = canvasMoveDirection(e.clientX);
+  if (dir !== canvasTouchDir) applyCanvasTouchDirection(dir);
+});
+
+canvas.addEventListener('pointerup', (e) => {
+  if (!canvas.hasPointerCapture(e.pointerId)) return;
+  clearCanvasTouch(e);
+});
+
+canvas.addEventListener('pointercancel', clearCanvasTouch);
+
+overlay.addEventListener('click', () => {
   void gameAudio.unlock();
 });
 
@@ -225,7 +291,7 @@ document.addEventListener('keyup', (e) => {
 
 showOverlay(
   '小朋友下樓梯',
-  '用 ← → 或 A D 左右移動。黃色彈簧會彈起、灰色輸送帶會推你左右移動。小心紅色尖刺！'
+  '鍵盤 ← → / A D，手機可用下方按鈕或按住畫面左右側移動。黃色彈簧彈起、灰色輸送帶推移，小心紅色尖刺！'
 );
 startBtn.textContent = '開始遊戲';
 

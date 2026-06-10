@@ -14,7 +14,7 @@ import { Player } from './player.js';
 import { createInitialStairs, spawnStair } from './stair.js';
 import { checkStairCollision, isStandingOn, isSpikeHit } from './collision.js';
 import { isCeilingSpikeHit, drawCeilingSpikes } from './ceiling.js';
-import { gameAudio } from './audio.js?v=6';
+import { gameAudio } from './audio.js?v=7';
 
 export const GameState = {
   MENU: 'menu',
@@ -63,6 +63,16 @@ export class Game {
   handleKeyUp(code) {
     if (code === 'ArrowLeft' || code === 'KeyA') this.keys.left = false;
     if (code === 'ArrowRight' || code === 'KeyD') this.keys.right = false;
+  }
+
+  setMove(direction, active) {
+    if (direction === 'left') this.keys.left = active;
+    if (direction === 'right') this.keys.right = active;
+  }
+
+  clearMove() {
+    this.keys.left = false;
+    this.keys.right = false;
   }
 
   update(now) {
